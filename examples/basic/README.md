@@ -24,7 +24,7 @@ module "replicator" {
 resource "azapi_resource" "this" {
   location                         = module.replicator.azapi_header.location
   name                             = module.replicator.azapi_header.name
-  parent_id                        = "/subscriptions/${data.azurerm_client_config.current.subscription_id}"
+  parent_id                        = module.replicator.azapi_header.parent_id
   type                             = module.replicator.azapi_header.type
   body                             = module.replicator.body
   ignore_null_property             = module.replicator.azapi_header.ignore_null_property
