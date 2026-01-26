@@ -1,0 +1,32 @@
+Test Case: with_tags_updated_config
+================================================================================
+
+Initial Error:
+╷
+│ Error: Invalid Resource ID
+│
+│   with azapi_resource.this,
+│   on azapi.tf line 16, in resource "azapi_resource" "this":
+│   16:   parent_id                        = module.replicator.azapi_header.parent_id
+│
+│ invalid resource ID: resource id 'f7a632a5-49db-4c5e-9828-cd62cb753971' must start with '/'
+╵
+
+Fix Process:
+
+Attempt 1:
+- Problem Analysis: The parent_id is set to just the subscription_id value (like 'f7a632a5-49db-4c5e-9828-cd62cb753971'), but AzAPI requires a full resource ID format starting with '/' (like '/subscriptions/f7a632a5-49db-4c5e-9828-cd62cb753971'). The issue is in migrate_main.tf line 6 where parent_id = var.subscription_id.
+- Fix Method: Update migrate_main.tf to format the parent_id correctly by prefixing '/subscriptions/' to the subscription_id
+- Changes Made: Modified migrate_main.tf line 6 from 'parent_id = var.subscription_id' to 'parent_id = "/subscriptions/${var.subscription_id}"'
+- Result: Success - terraform plan now runs without errors. Plan shows drift that needs evaluation against acceptable_drift_patterns.md
+
+Final Result: Fix successful
+
+All detected drifts were acceptable according to acceptable_drift_patterns.md:
+- ignore_null_property: AzAPI resource-level attribute change (acceptable)
+- locks: AzAPI resource-level attribute change (acceptable)
+- output: AzAPI computed output change (acceptable)
+- replace_triggers_external_values: AzAPI resource-level attribute change (acceptable)
+- sensitive_body_version: AzAPI resource-level attribute change (acceptable)
+- type: API version change from @2025-04-01 to @2023-07-01 (acceptable)
+- body.managedBy: Optional field with null value (acceptable)
