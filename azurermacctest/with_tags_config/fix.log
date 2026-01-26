@@ -1,0 +1,25 @@
+Test Case: with_tags_config
+================================================================================
+
+Initial Error:
+Error: Unsupported block type
+  on azapi.tf line 26, in resource "azapi_resource" "this":
+  26:   retry {
+Blocks of type "retry" are not expected here. Did you mean to define argument "retry"? If so, use the equals sign to assign it a value.
+
+Fix Process:
+
+Attempt 1:
+- Problem Analysis: The `retry` parameter in azapi_resource should be an argument (object) not a block. The error message suggests using equals sign to assign it a value.
+- Fix Method: Convert the `retry` block to an object argument
+- Changes Made: Converting retry from block syntax to object syntax with conditional check for null
+- Result: Success on retry syntax, but new error revealed: "Invalid Resource ID - invalid resource ID: resource id 'f7a632a5-49db-4c5e-9828-cd62cb753971' must start with '/'"
+
+Attempt 2:
+- Problem Analysis: The parent_id must start with '/' but the module is returning just the subscription ID. The parent_id should be in format "/subscriptions/{subscription_id}"
+- Fix Method: Modify the parent_id to add the proper prefix format
+- Changes Made: Changing parent_id from module.replicator.azapi_header.parent_id to "/subscriptions/${module.replicator.azapi_header.parent_id}"
+- Result: Success! Plan now shows state migration with acceptable drifts according to acceptable_drift_patterns.md
+
+Final Result: Fix successful
+

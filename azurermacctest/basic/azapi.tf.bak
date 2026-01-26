@@ -1,0 +1,40 @@
+module "replicator" {
+  source = "../.."
+
+  name            = "acctestRG-${random_integer.number.result}"
+  location        = "eastus"
+  subscription_id = data.azurerm_client_config.current.subscription_id
+}
+
+resource "azapi_resource" "this" {
+  type                             = module.replicator.azapi_header.type
+  name                             = module.replicator.azapi_header.name
+  location                         = module.replicator.azapi_header.location
+  parent_id                        = "/subscriptions/${data.azurerm_client_config.current.subscription_id}"
+  tags                             = module.replicator.azapi_header.tags
+  body                             = module.replicator.body
+  ignore_null_property             = module.replicator.azapi_header.ignore_null_property
+  sensitive_body                   = module.replicator.sensitive_body
+  sensitive_body_version           = module.replicator.sensitive_body_version
+  replace_triggers_external_values = module.replicator.replace_triggers_external_values
+  locks                            = module.replicator.locks
+  retry                            = module.replicator.retry
+
+  dynamic "identity" {
+    for_each = can(module.replicator.azapi_header.identity) ? [module.replicator.identity] : []
+    content {
+      type         = identity.value.type
+      identity_ids = try(identity.value.identity_ids, null)
+    }
+  }
+
+  dynamic "timeouts" {
+    for_each = module.replicator.timeouts != null ? [module.replicator.timeouts] : []
+    content {
+      create = timeouts.value.create
+      delete = timeouts.value.delete
+      read   = timeouts.value.read
+      update = timeouts.value.update
+    }
+  }
+}

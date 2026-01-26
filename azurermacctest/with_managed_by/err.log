@@ -1,0 +1,28 @@
+Test Case: with_managed_by
+================================================================================
+
+Critical Failure: State migration completely failed - resource recreation detected
+
+Initial Error:
+Terraform plan shows resource will be destroyed and recreated (replace):
+
+  # azapi_resource.this must be replaced
+  # (moved from azurerm_resource_group.test)
+-/+ resource "azapi_resource" "this" {
+      ~ parent_id = "/subscriptions/f7a632a5-49db-4c5e-9828-cd62cb753971" -> "/subscriptions/00000000-0000-0000-0000-000000000000" # forces replacement
+      ~ type      = "Microsoft.Resources/resourceGroups@2025-04-01" -> "Microsoft.Resources/resourceGroups@2023-07-01"
+    }
+
+Root Cause Analysis:
+The state migration failed because:
+1. The parent_id is changing from the actual subscription ID (f7a632a5-49db-4c5e-9828-cd62cb753971) to a placeholder/default value (00000000-0000-0000-0000-000000000000)
+2. This forces replacement of the resource, which defeats the purpose of state migration
+3. The type version is also changing from @2025-04-01 to @2023-07-01
+
+This indicates a fundamental module implementation error where:
+- The module is not correctly preserving the parent_id from the original AzureRM resource
+- The module may be using a hardcoded or default subscription ID instead of reading it from the data source or client config
+- The API version mismatch also suggests the module configuration may not be aligned with the actual resource state
+
+Conclusion:
+This is a critical module implementation bug that prevents successful state migration. The resource group would be destroyed and recreated, causing data loss and service disruption in production environments. The module's handling of parent_id and API version needs to be fixed before this test case can pass.
